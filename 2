@@ -1,0 +1,55 @@
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+local function safeClick(button)
+	if button and button:IsA("ImageButton") then
+		pcall(function()
+			button:Activate()
+		end)
+	end
+end
+
+RunService.Heartbeat:Connect(function()
+	local PlayerGui = Player:FindFirstChild("PlayerGui")
+	if not PlayerGui then return end
+
+	-- Нажать Play
+	local NewsApp = PlayerGui:FindFirstChild("NewsApp")
+	if NewsApp and NewsApp.Enabled then
+		local PlayButton = NewsApp:FindFirstChild("EnclosingFrame")?
+			:FindFirstChild("MainFrame")?
+			:FindFirstChild("Contents")?
+			:FindFirstChild("PlayButton")
+		safeClick(PlayButton)
+	end
+
+	-- Выбрать Baby
+	local DialogApp = PlayerGui:FindFirstChild("DialogApp")
+	if DialogApp then
+		local Dialog = DialogApp:FindFirstChild("Dialog")
+		if Dialog then
+			local RoleDialog = Dialog:FindFirstChild("RoleChooserDialog")
+			if RoleDialog and RoleDialog.Visible then
+				local BabyButton = RoleDialog:FindFirstChild("Baby")
+				safeClick(BabyButton)
+			end
+
+			-- Закрыть окно доната
+			local RobuxDialog = Dialog:FindFirstChild("RobuxProductDialog")
+			if RobuxDialog and RobuxDialog.Visible then
+				RobuxDialog.Visible = false
+			end
+		end
+	end
+
+	-- Забрать награду
+	local DailyLogin = PlayerGui:FindFirstChild("DailyLoginApp")
+	if DailyLogin and DailyLogin.Enabled then
+		local ClaimButton = DailyLogin:FindFirstChild("Frame")?
+			:FindFirstChild("Body")?
+			:FindFirstChild("Buttons")?
+			:FindFirstChild("ClaimButton")
+		safeClick(ClaimButton)
+	end
+end)
