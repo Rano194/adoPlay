@@ -1,0 +1,81 @@
+    local function FarmPet()
+        _G.ScriptRunning = true
+        --print("FarmPet Now running!")
+        local Players = game:GetService("Players")
+        local Player = Players.LocalPlayer
+        local CoreGui = game:GetService("CoreGui")
+        local PlayerGui = Player:FindFirstChildOfClass("PlayerGui") or CoreGui
+        local LiveOpsMapSwap = require(game:GetService("ReplicatedStorage").SharedModules.Game.LiveOpsMapSwap)
+
+        local playButton = game:GetService("Players").LocalPlayer.PlayerGui.NewsApp.EnclosingFrame.MainFrame.Contents.PlayButton
+        local babyButton = game:GetService("Players").LocalPlayer.PlayerGui.DialogApp.Dialog.RoleChooserDialog.Baby
+        local rbxProductButton = game:GetService("Players").LocalPlayer.PlayerGui.DialogApp.Dialog.RobuxProductDialog.Buttons.ButtonTemplate
+        local claimButton = game:GetService("Players").LocalPlayer.PlayerGui.DailyLoginApp.Frame.Body.Buttons.ClaimButton
+
+        local router
+        for i, v in next, getgc(true) do
+            if type(v) == 'table' and rawget(v, 'get_remote_from_cache') then
+                router = v
+            end
+        end
+        local function rename(remotename, hashedremote)
+            hashedremote.Name = remotename
+        end
+        -- Apply renaming to upvalues of the RouterClient.init function
+        table.foreach(debug.getupvalue(router.get_remote_from_cache, 1), rename)
+
+        
+
+
+        task.wait(1)
+        local xc = 0
+        local NewAcc = false
+        local HasTradeLic = false
+        local ClientData = require(game:GetService("ReplicatedStorage").ClientModules.Core.ClientData)
+        local Cash = ClientData.get_data()[game.Players.LocalPlayer.Name].money
+        
+
+        local function FireSig(button)
+            pcall(function()
+                for _, connection in pairs(getconnections(button.MouseButton1Down)) do
+                    connection:Fire()
+                end
+                task.wait(1)
+                for _, connection in pairs(getconnections(button.MouseButton1Up)) do
+                    connection:Fire()
+                end
+                task.wait(1)
+                for _, connection in pairs(getconnections(button.MouseButton1Click)) do
+                    connection:Fire()
+                    print(button.Name.." clicked!")
+                end
+            end)
+        end
+        
+        
+        local RunService = game:GetService("RunService")
+        local DoneAutoPlay = false
+        -- Connect to Heartbeat
+        RunService.Heartbeat:Connect(function()
+            if game:GetService("Players").LocalPlayer.PlayerGui.NewsApp.Enabled then
+                FireSig(game:GetService("Players").LocalPlayer.PlayerGui.NewsApp.EnclosingFrame.MainFrame.Contents.PlayButton)
+                task.wait(1)
+                if game:GetService("Players").LocalPlayer.PlayerGui.DialogApp.Dialog.RoleChooserDialog.Visible then
+                    FireSig(game:GetService("Players").LocalPlayer.PlayerGui.DialogApp.Dialog.RoleChooserDialog.Baby)
+                    task.wait(1)
+                end
+                
+                if game:GetService("Players").LocalPlayer.PlayerGui.DialogApp.Dialog.RobuxProductDialog.Visible then
+                    game:GetService("Players").LocalPlayer.PlayerGui.DialogApp.Dialog.RobuxProductDialog.Visible = false
+                    task.wait(1)
+                end
+                
+                if game:GetService("Players").LocalPlayer.PlayerGui.DailyLoginApp.Enabled then
+                    FireSig(game:GetService("Players").LocalPlayer.PlayerGui.DailyLoginApp.Frame.Body.Buttons.ClaimButton)
+                    task.wait(1)
+                end
+            end
+        end)
+
+print("Run")
+FarmPet()
