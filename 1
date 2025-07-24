@@ -1,0 +1,59 @@
+_G.ScriptRunning = true
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+
+-- Каждое обновление кадра (Heartbeat)
+RunService.Heartbeat:Connect(function()
+    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui")
+    if not PlayerGui then return end
+
+    -- Если открыто главное меню с кнопкой "Play"
+    local NewsApp = PlayerGui:FindFirstChild("NewsApp")
+    if NewsApp and NewsApp.Enabled then
+        local playButton = NewsApp:FindFirstChild("EnclosingFrame")
+            and NewsApp.EnclosingFrame:FindFirstChild("MainFrame")
+            and NewsApp.EnclosingFrame.MainFrame:FindFirstChild("Contents")
+            and NewsApp.EnclosingFrame.MainFrame.Contents:FindFirstChild("PlayButton")
+
+        if playButton and playButton:IsA("ImageButton") then
+            playButton:Activate()
+            task.wait(1)
+        end
+
+        -- Если открыт выбор роли
+        local DialogApp = PlayerGui:FindFirstChild("DialogApp")
+        if DialogApp and DialogApp:FindFirstChild("Dialog") then
+            local RoleDialog = DialogApp.Dialog:FindFirstChild("RoleChooserDialog")
+            if RoleDialog and RoleDialog.Visible then
+                local babyButton = RoleDialog:FindFirstChild("Baby")
+                if babyButton and babyButton:IsA("ImageButton") then
+                    babyButton:Activate()
+                    task.wait(1)
+                end
+            end
+
+            -- Закрытие окна доната (если оно открыто)
+            local RobuxDialog = DialogApp.Dialog:FindFirstChild("RobuxProductDialog")
+            if RobuxDialog and RobuxDialog.Visible then
+                RobuxDialog.Visible = false
+                task.wait(1)
+            end
+        end
+
+        -- Забираем ежедневную награду
+        local DailyLoginApp = PlayerGui:FindFirstChild("DailyLoginApp")
+        if DailyLoginApp and DailyLoginApp.Enabled then
+            local claimButton = DailyLoginApp:FindFirstChild("Frame")
+                and DailyLoginApp.Frame:FindFirstChild("Body")
+                and DailyLoginApp.Frame.Body:FindFirstChild("Buttons")
+                and DailyLoginApp.Frame.Body.Buttons:FindFirstChild("ClaimButton")
+
+            if claimButton and claimButton:IsA("ImageButton") then
+                claimButton:Activate()
+                task.wait(1)
+            end
+        end
+    end
+end)
