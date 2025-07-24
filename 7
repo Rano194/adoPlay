@@ -1,0 +1,58 @@
+local clientData = require(game.ReplicatedStorage.ClientModules.Core.ClientData)
+local playerData = clientData.get_data()[tostring(game.Players.LocalPlayer)]
+
+local StorageAccount = "RanoPets"
+local petName = "summerfest_2025_coconut_friend"
+
+function GetFilteredPets(petName, maxCount)
+    local playerData = clientData.get_data()[tostring(game.Players.LocalPlayer)]
+    local filteredPets = {}
+
+    for _, pet in pairs(playerData.inventory.pets or {}) do
+        if #filteredPets >= maxCount then
+            break
+        end
+
+        if pet.kind == petName then
+            table.insert(filteredPets, pet)
+        end
+    end
+
+    return filteredPets
+end
+
+-- Отправляем петов обратно
+local canceled = false
+
+while true do
+    task.wait(3)
+    local args = {
+	game:GetService("Players"):WaitForChild(StorageAccount)
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/SendTradeRequest"):FireServer(unpack(args))
+    if game:GetService("Players").LocalPlayer.PlayerGui.TradeApp.Frame.Visible == true then
+        task.wait(1)
+        print("[INFO] Accept trade")
+        local pets = GetFilteredPets(petName, 18)
+        for i, pet in ipairs(pets) do
+            if #pets < 18 then
+                canceled = true
+            end
+            local args = {pet.unique}
+            game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/AddItemToOffer"):FireServer(unpack(args))
+        end
+        while true do
+            task.wait(0.5)
+            game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/AcceptNegotiation"):FireServer()
+            game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/ConfirmTrade"):FireServer()
+            if game:GetService("Players").LocalPlayer.PlayerGui.TradeApp.Frame.Visible == false then
+                task.wait(3)
+                print("[INFO] Finish trade")
+                break
+            end
+        end
+        if canceled == true then
+            break
+        end
+    end
+end
