@@ -1,0 +1,96 @@
+local function FarmPet()
+    _G.ScriptRunning = true
+    local Players = game:GetService("Players")
+    local Player = Players.LocalPlayer
+    local CoreGui = game:GetService("CoreGui")
+    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui") or CoreGui
+
+    local LiveOpsMapSwap = require(game:GetService("ReplicatedStorage").SharedModules.Game.LiveOpsMapSwap)
+
+    -- GUI элементы
+    local playButton = PlayerGui:WaitForChild("NewsApp", 10)
+        and PlayerGui.NewsApp:WaitForChild("EnclosingFrame", 5)
+        and PlayerGui.NewsApp.EnclosingFrame:WaitForChild("MainFrame", 5)
+        and PlayerGui.NewsApp.EnclosingFrame.MainFrame:WaitForChild("Contents", 5)
+        and PlayerGui.NewsApp.EnclosingFrame.MainFrame.Contents:WaitForChild("PlayButton", 5)
+
+    local babyButton = PlayerGui:WaitForChild("DialogApp", 10)
+        and PlayerGui.DialogApp:WaitForChild("Dialog", 5)
+        and PlayerGui.DialogApp.Dialog:WaitForChild("RoleChooserDialog", 5)
+        and PlayerGui.DialogApp.Dialog.RoleChooserDialog:WaitForChild("Baby", 5)
+
+    local robuxDialog = PlayerGui.DialogApp.Dialog:WaitForChild("RobuxProductDialog", 5)
+
+    local claimButton = PlayerGui:WaitForChild("DailyLoginApp", 10)
+        and PlayerGui.DailyLoginApp:WaitForChild("Frame", 5)
+        and PlayerGui.DailyLoginApp.Frame:WaitForChild("Body", 5)
+        and PlayerGui.DailyLoginApp.Frame.Body:WaitForChild("Buttons", 5)
+        and PlayerGui.DailyLoginApp.Frame.Body.Buttons:WaitForChild("ClaimButton", 5)
+
+    -- Переименование RemoteEvents (для удобства отладки)
+    local router
+    for _, v in next, getgc(true) do
+        if type(v) == "table" and rawget(v, "get_remote_from_cache") then
+            router = v
+        end
+    end
+
+    local function rename(remotename, hashedremote)
+        hashedremote.Name = remotename
+    end
+
+    if router then
+        pcall(function()
+            table.foreach(debug.getupvalue(router.get_remote_from_cache, 1), rename)
+        end)
+    end
+
+    task.wait(1)
+
+    local ClientData = require(game:GetService("ReplicatedStorage").ClientModules.Core.ClientData)
+    local Cash = ClientData.get_data()[Player.Name].money
+
+    -- Функция для имитации кликов
+    local function FireSig(button)
+        pcall(function()
+            for _, connection in pairs(getconnections(button.MouseButton1Down)) do
+                connection:Fire()
+            end
+            task.wait(0.3)
+            for _, connection in pairs(getconnections(button.MouseButton1Up)) do
+                connection:Fire()
+            end
+            task.wait(0.3)
+            for _, connection in pairs(getconnections(button.MouseButton1Click)) do
+                connection:Fire()
+            end
+        end)
+    end
+
+    local RunService = game:GetService("RunService")
+    RunService.Heartbeat:Connect(function()
+        if PlayerGui:FindFirstChild("NewsApp") and PlayerGui.NewsApp.Enabled then
+            if playButton then
+                FireSig(playButton)
+            end
+
+            task.wait(0.5)
+
+            if PlayerGui.DialogApp.Dialog.RoleChooserDialog.Visible and babyButton then
+                FireSig(babyButton)
+            end
+
+            task.wait(0.5)
+
+            if robuxDialog and robuxDialog.Visible then
+                robuxDialog.Visible = false
+            end
+
+            if PlayerGui:FindFirstChild("DailyLoginApp") and PlayerGui.DailyLoginApp.Enabled and claimButton then
+                FireSig(claimButton)
+            end
+        end
+    end)
+end
+
+FarmPet()
