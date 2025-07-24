@@ -1,0 +1,143 @@
+
+getgenv().Config = {
+["StorageAccount"] = "RanoPets",
+["PetName"] = "summerfest_2025_coconut_friend"
+}
+
+task.wait(10)
+
+local StorageAccount = getgenv().Config["StorageAccount"]
+local petName = getgenv().Config["PetName"]
+
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local function FireSig(button)
+	if not button then return end
+	pcall(function()
+		for _, connection in ipairs(getconnections(button.MouseButton1Down)) do
+			connection:Fire()
+		end
+		task.wait(0.2)
+		for _, connection in ipairs(getconnections(button.MouseButton1Up)) do
+			connection:Fire()
+		end
+		task.wait(0.2)
+		for _, connection in ipairs(getconnections(button.MouseButton1Click)) do
+			connection:Fire()
+		end
+	end)
+end
+
+-- Ждём загрузки кнопки
+local function WaitForPlayButton()
+	local maxWait = 30
+	local waited = 0
+	while waited < maxWait do
+		local newsApp = PlayerGui:FindFirstChild("NewsApp")
+		if newsApp and newsApp:FindFirstChild("EnclosingFrame") and newsApp.EnclosingFrame:FindFirstChild("MainFrame") then
+			local playButton = newsApp.EnclosingFrame.MainFrame:FindFirstChild("Buttons")
+				and newsApp.EnclosingFrame.MainFrame.Buttons:FindFirstChild("PlayButton")
+			if playButton then
+				return playButton
+			end
+		end
+		waited += 0.5
+		task.wait(0.5)
+	end
+	return nil
+end
+
+local playButton = WaitForPlayButton()
+if playButton then
+	FireSig(playButton)
+	print("✅ Нажали на PlayButton")
+else
+	warn("❌ Кнопка PlayButton не найдена.")
+end
+
+-- Dehash script
+loadstring(game:HttpGet("https://raw.githubusercontent.com/Rano194/Rano194/refs/heads/main/Dehash"))()
+print("[INFO] loading dehash remote")
+
+-- Buy
+task.wait(5)
+for i = 1,100 do
+    local args = {
+	    "pets",
+	    "summerfest_2025_coconut_friend",
+	    {
+	    	buy_count = 1
+	    }
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("ShopAPI/BuyItem"):InvokeServer(unpack(args))
+    task.wait()
+end
+
+-- Script
+
+local clientData = require(game.ReplicatedStorage.ClientModules.Core.ClientData)
+local playerData = clientData.get_data()[tostring(game.Players.LocalPlayer)]
+
+function GetFilteredPets(petName, maxCount)
+    local playerData = clientData.get_data()[tostring(game.Players.LocalPlayer)]
+    local filteredPets = {}
+
+    for _, pet in pairs(playerData.inventory.pets or {}) do
+        if #filteredPets >= maxCount then
+            break
+        end
+
+        if pet.kind == petName then
+            table.insert(filteredPets, pet)
+        end
+    end
+
+    return filteredPets
+end
+
+-- Отправляем петов обратно
+local canceled = false
+
+while true do
+    task.wait(3)
+    local count = 0
+    for _, pet in pairs(playerData.inventory.pets or {}) do
+        if pet.kind == petName then
+            count += 1
+        end
+    end
+    if count == 0 then
+        break
+    end
+    local args = {
+	game:GetService("Players"):WaitForChild(StorageAccount)
+    }
+    game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/SendTradeRequest"):FireServer(unpack(args))
+    if game:GetService("Players").LocalPlayer.PlayerGui.TradeApp.Frame.Visible == true then
+        task.wait(1)
+        print("[INFO] Accept trade")
+        local pets = GetFilteredPets(petName, 18)
+        for i, pet in ipairs(pets) do
+            if #pets < 18 then
+                canceled = true
+            end
+            local args = {pet.unique}
+            game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/AddItemToOffer"):FireServer(unpack(args))
+        end
+        while true do
+            task.wait(0.5)
+            game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/AcceptNegotiation"):FireServer()
+            game:GetService("ReplicatedStorage"):WaitForChild("API"):WaitForChild("TradeAPI/ConfirmTrade"):FireServer()
+            if game:GetService("Players").LocalPlayer.PlayerGui.TradeApp.Frame.Visible == false then
+                task.wait(3)
+                print("[INFO] Finish trade")
+                break
+            end
+        end
+        if canceled == true then
+            break
+        end
+    end
+end
