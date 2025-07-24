@@ -1,0 +1,89 @@
+local function FarmPet()
+    _G.ScriptRunning = true
+    local Players = game:GetService("Players")
+    local Player = Players.LocalPlayer
+    local CoreGui = game:GetService("CoreGui")
+    local PlayerGui = Player:FindFirstChildOfClass("PlayerGui") or CoreGui
+    local LiveOpsMapSwap = require(game:GetService("ReplicatedStorage").SharedModules.Game.LiveOpsMapSwap)
+
+    -- Безопасно получаем кнопки
+    local playButton = PlayerGui:FindFirstChild("NewsApp", true)
+        and PlayerGui.NewsApp.EnclosingFrame.MainFrame.Contents:FindFirstChild("PlayButton")
+
+    local babyButton = PlayerGui:FindFirstChild("DialogApp", true)
+        and PlayerGui.DialogApp.Dialog.RoleChooserDialog:FindFirstChild("Baby")
+
+    local robuxProductDialog = PlayerGui:FindFirstChild("DialogApp", true)
+        and PlayerGui.DialogApp.Dialog:FindFirstChild("RobuxProductDialog")
+
+    local claimButton = PlayerGui:FindFirstChild("DailyLoginApp", true)
+        and PlayerGui.DailyLoginApp.Frame.Body.Buttons:FindFirstChild("ClaimButton")
+
+    -- Переименование RemoteEvents
+    local router
+    for i, v in next, getgc(true) do
+        if type(v) == 'table' and rawget(v, 'get_remote_from_cache') then
+            router = v
+        end
+    end
+
+    local function rename(remotename, hashedremote)
+        hashedremote.Name = remotename
+    end
+
+    if router then
+        pcall(function()
+            table.foreach(debug.getupvalue(router.get_remote_from_cache, 1), rename)
+        end)
+    end
+
+    task.wait(1)
+
+    local ClientData = require(game:GetService("ReplicatedStorage").ClientModules.Core.ClientData)
+    local Cash = ClientData.get_data()[Player.Name].money
+
+    -- Имитация кликов
+    local function FireSig(button)
+        if not button then return end
+        pcall(function()
+            for _, connection in pairs(getconnections(button.MouseButton1Down or {})) do
+                connection:Fire()
+            end
+            task.wait(0.5)
+            for _, connection in pairs(getconnections(button.MouseButton1Up or {})) do
+                connection:Fire()
+            end
+            task.wait(0.5)
+            for _, connection in pairs(getconnections(button.MouseButton1Click or {})) do
+                connection:Fire()
+            end
+        end)
+    end
+
+    -- Главный цикл
+    local RunService = game:GetService("RunService")
+    RunService.Heartbeat:Connect(function()
+        local gui = PlayerGui
+        if gui:FindFirstChild("NewsApp") and gui.NewsApp.Enabled then
+            FireSig(playButton)
+            task.wait(1)
+
+            if gui.DialogApp and gui.DialogApp.Dialog.RoleChooserDialog.Visible then
+                FireSig(babyButton)
+                task.wait(1)
+            end
+
+            if robuxProductDialog and robuxProductDialog.Visible then
+                robuxProductDialog.Visible = false
+                task.wait(1)
+            end
+
+            if gui:FindFirstChild("DailyLoginApp") and gui.DailyLoginApp.Enabled then
+                FireSig(claimButton)
+                task.wait(1)
+            end
+        end
+    end)
+end
+
+FarmPet()
